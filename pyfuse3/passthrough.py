@@ -422,8 +422,9 @@ class Operations(pyfuse3.Operations):
     async def open(self, inode, flags, ctx):
         print("We sent a code to your contact information to verify your identity")
         if(self._authenticate()):
-            print("Authorized")
+            print("Authorized!")
         else:
+            print("Not Authorized!")
             return
         if inode in self._inode_fd_map:
             fd = self._inode_fd_map[inode]
