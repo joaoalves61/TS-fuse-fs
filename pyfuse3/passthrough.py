@@ -43,6 +43,7 @@ import os
 import signal
 import smtplib
 import sys
+import random
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
@@ -104,16 +105,15 @@ class Operations(pyfuse3.Operations):
         signal.signal(signal.SIGALRM, self._interrupted)
 
     def _authenticate(self):
-        totp = pyotp.TOTP(self._user._username)
-        username = 'd5e14700a1fb32'
-        password = '93d2855f605a96'
 
+        systemRandom = random.SystemRandom()
         # The actual mail send
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login("ts.grupo6@gmail.com", "tsgrupo62018")
-        code = totp.now()
-        msg = MIMEText("Código de autorização: " + code)
+        code = systemRandom.randint(100000,999999)
+        gen_code = str(code)
+        msg = MIMEText("Código de autorização: " + gen_code)
         msg['Subject'] = 'Código de acesso ao ficheiro/diretoria!'
         msg['From'] = 'ts.grupo6@gmail.com'
         msg['To'] = self._user._contact
@@ -128,7 +128,8 @@ class Operations(pyfuse3.Operations):
         # disable the alarm after success
         signal.alarm(0)
 
-        return totp.verify(int(code))
+        if gen_code == code: return True
+        else: return False
 
 
     def _add_path(self, inode, path):
