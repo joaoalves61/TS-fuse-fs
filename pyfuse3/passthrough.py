@@ -44,6 +44,8 @@ import sys
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
+from users import User
+
 basedir = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
 if (os.path.exists(os.path.join(basedir, 'setup.py')) and
     os.path.exists(os.path.join(basedir, 'src', 'pyfuse3.pyx'))):
@@ -75,6 +77,7 @@ class Operations(pyfuse3.Operations):
         self._fd_inode_map = dict()
         self._inode_fd_map = dict()
         self._fd_open_count = dict()
+        self._user = User()
 
     def _inode_to_path(self, inode):
         try:
@@ -462,7 +465,7 @@ def main():
 
     log.debug('Mounting...')
     fuse_options = set(pyfuse3.default_options)
-    fuse_options.add('fsname=passthroughfs')
+    fuse_options.add('fsname=securepassthroughfs')
     if options.debug_fuse:
         fuse_options.add('debug')
     pyfuse3.init(operations, options.mountpoint, fuse_options)
