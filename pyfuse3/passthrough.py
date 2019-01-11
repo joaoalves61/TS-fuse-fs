@@ -47,7 +47,7 @@ import sys
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
 import time
-
+import re
 import pyotp
 
 from users import User
@@ -109,15 +109,15 @@ class Operations(pyfuse3.Operations):
         password = '93d2855f605a96'
 
         # The actual mail send
-        server = smtplib.SMTP('smtp.mailtrap.io', 2525)
+        server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(username, password)
+        server.login("ts.grupo6@gmail.com", "tsgrupo62018")
         code = totp.now()
         msg = MIMEText(code)
-        msg['Subject'] = '[TS] App 2FA'
-        msg['From'] = 'joao_pedro.1997@hotmail.com'
+        msg['Subject'] = 'Código de acesso ao ficheiro/diretoria!'
+        msg['From'] = 'ts.grupo6@gmail.com'
         msg['To'] = self._user._contact
-        server.sendmail('joao_pedro.1997@hotmail.com', [user._contact], msg.as_string())
+        server.sendmail('ts.grupo6@gmail.com', [self._user._contact], msg.as_string())
         server.quit()
         signal.alarm(TIMEOUT)
         try:
@@ -128,7 +128,8 @@ class Operations(pyfuse3.Operations):
         # disable the alarm after success
         signal.alarm(0)
 
-        return totp.verify(code)
+        return totp.verify(int(code))
+
 
     def _add_path(self, inode, path):
         log.debug('_add_path for %d, %s', inode, path)
@@ -520,7 +521,7 @@ def main():
         log.debug('Use fusermount3 -u ' + options.mountpoint + " to umount")
         trio.run(pyfuse3.main)
     except:
-        pyfuse3.close(unmount=False)
+        pyfuse3.close(unmount=True)
         raise
 
     log.debug('Unmounting..')
