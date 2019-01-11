@@ -47,6 +47,7 @@ import random
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
+import threading
 import time
 import re
 import pyotp
@@ -522,12 +523,10 @@ def main():
         log.debug('Entering main loop..')
         log.debug('Use fusermount3 -u ' + options.mountpoint + " to umount")
         trio.run(pyfuse3.main)
+        #t.join()
     except:
         pyfuse3.close(unmount=True)
         raise
-
-    log.debug('Unmounting..')
-    pyfuse3.close()
 
 if __name__ == '__main__':
     main()
