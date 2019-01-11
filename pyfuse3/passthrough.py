@@ -113,7 +113,7 @@ class Operations(pyfuse3.Operations):
         server.starttls()
         server.login("ts.grupo6@gmail.com", "tsgrupo62018")
         code = totp.now()
-        msg = MIMEText(code)
+        msg = MIMEText("Código de autorização: " + code)
         msg['Subject'] = 'Código de acesso ao ficheiro/diretoria!'
         msg['From'] = 'ts.grupo6@gmail.com'
         msg['To'] = self._user._contact
