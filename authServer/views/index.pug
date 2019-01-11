@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  header.w3-container.w3-indigo
+    h1 Autenticação em sistema de ficheiros
+  .w3-container
+    if info
+      p.w3-green= info
+    .w3-card-4
+      form(action='/verifyCode' method='POST')
+        input.w3-input.w3-border(type='text' name='code' placeholder='Introduza o código que recebeu!')
+        input.w3-input.w3-border.w3-teal(type='submit' value='Autorizar')
+  br
+  br
+  footer.w3-container.w3-indigo
+    p Tecnologias de Segurança
