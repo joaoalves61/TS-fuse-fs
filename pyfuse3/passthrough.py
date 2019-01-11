@@ -61,6 +61,8 @@ if (os.path.exists(os.path.join(basedir, 'setup.py')) and
 
 import pyfuse3
 from argparse import ArgumentParser
+from base64 import b64decode
+from nacl.secret import SecretBox
 import errno
 import logging
 import stat as stat_m
@@ -121,15 +123,29 @@ class Operations(pyfuse3.Operations):
         server.sendmail('ts.grupo6@gmail.com', [self._user._contact], msg.as_string())
         server.quit()
         signal.alarm(TIMEOUT)
-        try:
-            code = input("-->")
-        except:
-            # timeout
-            code = None
-        # disable the alarm after success
-        signal.alarm(0)
-
-        if gen_code == code: return True
+        getOut = False
+        authorized = False
+        while(not(getOut)):
+            codeFile = open("../authCode/authCode.txt","r")
+            codeText = codeFile.read()
+            codeFile.close()
+            if (not(codeText == 'None')):
+                secretKey = "ts_2018_grupo6_tp3_ts_2018_grupo"
+                textData = codeText.split(':')
+                nonce = b64decode(textData[0])
+                encryptedData = b64decode(textData[1])
+                box = SecretBox(bytes(secretKey,encoding='utf8'))
+                decrypted = box.decrypt(encryptedData,nonce).decode('utf8')
+                if(decrypted == gen_code): authorized = True
+                codeFile = open("../authCode/authCode.txt","w")
+                codeFile.write("None")
+                codeFile.close()
+                signal.alarm(0)
+                getOut = True
+            else:
+                time.sleep(1) 
+    
+        if authorized: return True
         else: return False
 
 
