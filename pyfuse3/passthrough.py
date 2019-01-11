@@ -40,10 +40,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 '''
 
 import os
+import signal
+import smtplib
 import sys
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
+import time
+
+import pyotp
+
 from users import User
 
 basedir = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
@@ -60,11 +66,13 @@ from pyfuse3 import FUSEError
 from os import fsencode, fsdecode
 from collections import defaultdict
 import trio
+from email.mime.text import MIMEText
 
 import faulthandler
 faulthandler.enable()
 
 log = logging.getLogger(__name__)
+TIMEOUT = 30
 
 class Operations(pyfuse3.Operations):
 
@@ -89,6 +97,38 @@ class Operations(pyfuse3.Operations):
             # In case of hardlinks, pick any path
             val = next(iter(val))
         return val
+
+    def _interrupted(self, signum, frame):
+        "called when read times out"
+        print('Authentication timedout!')
+        signal.signal(signal.SIGALRM, self._interrupted)
+
+    def _authenticate(self):
+        totp = pyotp.TOTP(self._user._username)
+        username = 'd5e14700a1fb32'
+        password = '93d2855f605a96'
+
+        # The actual mail send
+        server = smtplib.SMTP('smtp.mailtrap.io', 2525)
+        server.starttls()
+        server.login(username, password)
+        code = totp.now()
+        msg = MIMEText(code)
+        msg['Subject'] = '[TS] App 2FA'
+        msg['From'] = 'joao_pedro.1997@hotmail.com'
+        msg['To'] = self._user._contact
+        server.sendmail('joao_pedro.1997@hotmail.com', [user._contact], msg.as_string())
+        server.quit()
+        signal.alarm(TIMEOUT)
+        try:
+            code = input("-->")
+        except:
+            # timeout
+            code = None
+        # disable the alarm after success
+        signal.alarm(0)
+
+        return totp.verify(code)
 
     def _add_path(self, inode, path):
         log.debug('_add_path for %d, %s', inode, path)
@@ -378,6 +418,11 @@ class Operations(pyfuse3.Operations):
         return stat_
 
     async def open(self, inode, flags, ctx):
+        print("We sent a code to your contact information to verify your identity")
+        if(self._authenticate()):
+            print("Authorized")
+        else:
+            return
         if inode in self._inode_fd_map:
             fd = self._inode_fd_map[inode]
             self._fd_open_count[fd] += 1
