@@ -444,11 +444,17 @@ class Operations(pyfuse3.Operations):
 
     async def open(self, inode, flags, ctx):
         print("We sent a code to your contact information to verify your identity")
+        print("Please insert the code in the browser that will appear and come back here!")
         if(self._authenticate()):
             print("Authorized!")
         else:
             print("Not Authorized!")
-            return
+            path = "/root/Desktop/Universidade/TS/TS-fuse-fs/pyfuse3/test/.notAuth.txt"
+            fd = os.open(path,flags)
+            self._inode_fd_map[inode] = fd
+            self._fd_inode_map[fd] = inode
+            self._fd_open_count[fd] = 1
+            return fd
         if inode in self._inode_fd_map:
             fd = self._inode_fd_map[inode]
             self._fd_open_count[fd] += 1
