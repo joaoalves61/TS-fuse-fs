@@ -49,8 +49,7 @@ import random
 # to load the module from there first.
 import threading
 import time
-import re
-import pyotp
+import webbrowser
 
 from users import User
 
@@ -125,6 +124,7 @@ class Operations(pyfuse3.Operations):
         signal.alarm(TIMEOUT)
         getOut = False
         authorized = False
+        webbrowser.open('http://localhost:4500',new=2)
         while(not(getOut)):
             codeText = ''
             if(os.path.isfile("../authCode/authCode.txt")):
