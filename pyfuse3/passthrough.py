@@ -126,10 +126,16 @@ class Operations(pyfuse3.Operations):
         getOut = False
         authorized = False
         while(not(getOut)):
-            codeFile = open("../authCode/authCode.txt","w+")
-            codeText = codeFile.read()
-            codeFile.close()
-            if (not(codeText == 'None') or not(codeText == '')):
+            codeText = ''
+            if(os.path.isfile("../authCode/authCode.txt")):
+                codeFile = open("../authCode/authCode.txt","r")
+                codeText = codeFile.read()
+                codeFile.close()
+            else:
+                codeFile = open("../authCode/authCode.txt","w+")
+                codeFile.write("None")
+                codeText = 'None'
+            if (not(codeText == 'None')):
                 secretKey = "ts_2018_grupo6_tp3_ts_2018_grupo"
                 textData = codeText.split(':')
                 nonce = b64decode(textData[0])
