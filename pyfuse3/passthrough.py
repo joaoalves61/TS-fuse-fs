@@ -1,43 +1,4 @@
-#!/usr/bin/env python3
-'''
-passthroughfs.py - Example file system for pyfuse3
 
-This file system mirrors the contents of a specified directory tree.
-
-Caveats:
-
- * Inode generation numbers are not passed through but set to zero.
-
- * Block size (st_blksize) and number of allocated blocks (st_blocks) are not
-   passed through.
-
- * Performance for large directories is not good, because the directory
-   is always read completely.
-
- * There may be a way to break-out of the directory tree.
-
- * The readdir implementation is not fully POSIX compliant. If a directory
-   contains hardlinks and is modified during a readdir call, readdir()
-   may return some of the hardlinked files twice or omit them completely.
-
- * If you delete or rename files in the underlying file system, the
-   passthrough file system will get confused.
-
-Copyright ©  Nikolaus Rath <Nikolaus.org>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
 
 import os
 import signal
@@ -445,29 +406,39 @@ class Operations(pyfuse3.Operations):
     async def open(self, inode, flags, ctx):
         print("We sent a code to your contact information to verify your identity")
         print("Please insert the code in the browser that will appear and come back here!")
+        patherr = "test/.notAuth.txt"
+        fderr = None
         if(self._authenticate()):
             print("Authorized!")
-        else:
-            print("Not Authorized!")
-            path = "test/.notAuth.txt"
-            fd = os.open(path,flags)
+            if inode in self._inode_fd_map and self._inode_fd_map[inode] != fderr:
+                fd = self._inode_fd_map[inode]
+                self._fd_open_count[fd] += 1
+                return fd
+            assert flags & os.O_CREAT == 0
+            try:
+                fd = os.open(self._inode_to_path(inode), flags)
+            except OSError as exc:
+                raise FUSEError(exc.errno)
             self._inode_fd_map[inode] = fd
             self._fd_inode_map[fd] = inode
             self._fd_open_count[fd] = 1
             return fd
-        if inode in self._inode_fd_map:
-            fd = self._inode_fd_map[inode]
-            self._fd_open_count[fd] += 1
-            return fd
-        assert flags & os.O_CREAT == 0
-        try:
-            fd = os.open(self._inode_to_path(inode), flags)
-        except OSError as exc:
-            raise FUSEError(exc.errno)
-        self._inode_fd_map[inode] = fd
-        self._fd_inode_map[fd] = inode
-        self._fd_open_count[fd] = 1
-        return fd
+
+        else:
+            print("Not Authorized!")
+            if inode in self._inode_fd_map and self._inode_fd_map[inode] == fderr:
+                fd = self._inode_fd_map[inode]
+                self._fd_open_count[fd] += 1
+                return fd
+            assert flags & os.O_CREAT == 0
+            try:
+                fderr = os.open(patherr, flags)
+            except OSError as exc:
+                raise FUSEError(exc.errno)
+            self._inode_fd_map[inode] = fderr
+            self._fd_inode_map[fderr] = inode
+            self._fd_open_count[fderr] = 1
+            return fderr
 
     async def create(self, inode_p, name, mode, flags, ctx):
         path = os.path.join(self._inode_to_path(inode_p), fsdecode(name))
