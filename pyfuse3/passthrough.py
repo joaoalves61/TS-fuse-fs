@@ -449,7 +449,7 @@ class Operations(pyfuse3.Operations):
             print("Authorized!")
         else:
             print("Not Authorized!")
-            path = "/root/Desktop/Universidade/TS/TS-fuse-fs/pyfuse3/test/.notAuth.txt"
+            path = "test/.notAuth.txt"
             fd = os.open(path,flags)
             self._inode_fd_map[inode] = fd
             self._fd_inode_map[fd] = inode
