@@ -1,10 +1,12 @@
+import getpass
 import os
 
 class User():
 
-    def __init__(self):
+    def __init__(self,):
         self._username = os.getlogin()
         self._filename = 'root/etc/' + self._username
+        self._password = getpass.getpass()
 
         try:
             file = open(self._filename, 'r')

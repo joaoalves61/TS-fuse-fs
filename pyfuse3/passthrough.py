@@ -5,6 +5,7 @@ import signal
 import smtplib
 import sys
 import random
+import pam
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
@@ -50,6 +51,8 @@ class Operations(pyfuse3.Operations):
         self._inode_fd_map = dict()
         self._fd_open_count = dict()
         self._user = User()
+        if (not(pam.authenticate(self._user._username, self._user._password))):
+            sys.exit()
 
     def _inode_to_path(self, inode):
         try:
