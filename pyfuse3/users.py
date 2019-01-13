@@ -20,7 +20,7 @@ class User():
                 getOut = True
             else: nAttempts = nAttempts + 1    
             if(nAttempts == 3):
-                print("Tentativas excedidas")
+                print("Too many attempts: authentication failed!")
                 sys.exit()
 
         try:
