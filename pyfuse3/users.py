@@ -16,9 +16,7 @@ class User():
         nAttempts = 0
         while(not(getOut)):
             self._password = getpass.getpass()
-            te  = pam.authenticate(self._username, self._password)
-            print(te)
-            if(te):
+            if(pam.authenticate(self._username, self._password)):
                 getOut = True
             else: nAttempts = nAttempts + 1    
             if(nAttempts == 3):
