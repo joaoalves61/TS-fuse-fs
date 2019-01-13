@@ -406,11 +406,9 @@ class Operations(pyfuse3.Operations):
     async def open(self, inode, flags, ctx):
         print("We sent a code to your contact information to verify your identity")
         print("Please insert the code in the browser that will appear and come back here!")
-        patherr = "test/.notAuth.txt"
-        fderr = None
         if(self._authenticate()):
             print("Authorized!")
-            if inode in self._inode_fd_map and self._inode_fd_map[inode] != fderr:
+            if inode in self._inode_fd_map:
                 fd = self._inode_fd_map[inode]
                 self._fd_open_count[fd] += 1
                 return fd
@@ -425,20 +423,13 @@ class Operations(pyfuse3.Operations):
             return fd
 
         else:
-            print("Not Authorized!")
-            if inode in self._inode_fd_map and self._inode_fd_map[inode] == fderr:
-                fd = self._inode_fd_map[inode]
-                self._fd_open_count[fd] += 1
-                return fd
-            assert flags & os.O_CREAT == 0
-            try:
-                fderr = os.open(patherr, flags)
-            except OSError as exc:
-                raise FUSEError(exc.errno)
+            print("Unauthorized")
+            fderr = sys.stderr.fileno()
             self._inode_fd_map[inode] = fderr
             self._fd_inode_map[fderr] = inode
             self._fd_open_count[fderr] = 1
             return fderr
+
 
     async def create(self, inode_p, name, mode, flags, ctx):
         path = os.path.join(self._inode_to_path(inode_p), fsdecode(name))
