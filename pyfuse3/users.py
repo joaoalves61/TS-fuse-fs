@@ -64,6 +64,6 @@ class User():
             encryptor = cipher.encryptor()
             ct = encryptor.update(self._contact.encode())
             message_to_write = nonce + salt + ct
-            file = open(self._filename, 'w+')
+            file = open(self._filename, 'wb')
             file.write(message_to_write)
             file.close()
