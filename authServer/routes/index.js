@@ -11,14 +11,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/verifyCode', (req,res) => {
-  var code = req.body.code
-  const nonce = nacl.randomBytes(24)
-  const secretKey = Buffer.from('ts_2018_grupo6_tp3_ts_2018_grupo','utf8')
-  const secretData = Buffer.from(code,'utf8')
-  const encryptedData =  nacl.secretbox(secretData,nonce,secretKey)
-  var nonce_base64 = encodeBase64(nonce)
-  var encryptedData_base64 = encodeBase64(encryptedData)
-  var result = '' + nonce_base64 + ':' + encryptedData_base64
+  var result = req.body.code
   fs.writeFile("../authCode/authCode.txt", result, erro => {
     res.render('index',{info: 'Código submetido!'})
   })

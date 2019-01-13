@@ -5,7 +5,6 @@ import signal
 import smtplib
 import sys
 import random
-import pam
 
 # If we are running from the pyfuse3 source directory, try
 # to load the module from there first.
@@ -51,8 +50,6 @@ class Operations(pyfuse3.Operations):
         self._inode_fd_map = dict()
         self._fd_open_count = dict()
         self._user = User()
-        if (not(pam.authenticate(self._user._username, self._user._password))):
-            sys.exit()
 
     def _inode_to_path(self, inode):
         try:
@@ -100,13 +97,7 @@ class Operations(pyfuse3.Operations):
                 codeFile.write("None")
                 codeText = 'None'
             if (not(codeText == 'None')):
-                secretKey = "ts_2018_grupo6_tp3_ts_2018_grupo"
-                textData = codeText.split(':')
-                nonce = b64decode(textData[0])
-                encryptedData = b64decode(textData[1])
-                box = SecretBox(bytes(secretKey,encoding='utf8'))
-                decrypted = box.decrypt(encryptedData,nonce).decode('utf8')
-                if(decrypted == gen_code): authorized = True
+                if(codeText == gen_code): authorized = True
                 codeFile = open("../authCode/authCode.txt","w")
                 codeFile.write("None")
                 codeFile.close()
